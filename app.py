@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 import base64
-import magic  # python-magic-bin works the same as python-magic
+import filetype
 
 app = Flask(__name__)
 
@@ -9,9 +9,9 @@ def process_file(file_b64):
     try:
         # Decode the base64 file string
         file_data = base64.b64decode(file_b64)
-        # Get MIME type using magic (python-magic-bin will automatically handle the DLLs for Windows)
-        mime = magic.Magic(mime=True)
-        mime_type = mime.from_buffer(file_data)
+        # Use filetype to guess the MIME type
+        kind = filetype.guess(file_data)
+        mime_type = kind.mime if kind else 'unknown'
         # Calculate file size in KB
         file_size_kb = len(file_data) / 1024
         return True, mime_type, round(file_size_kb, 2)
@@ -37,7 +37,7 @@ def process_data():
 
         # Process the file if file_b64 is provided
         if file_b64:
-            file_valid, file_mime_type, file_size_kb = process_file(file_b64)  # This is the corrected line
+            file_valid, file_mime_type, file_size_kb = process_file(file_b64)
         else:
             file_valid = False
             file_mime_type = None
